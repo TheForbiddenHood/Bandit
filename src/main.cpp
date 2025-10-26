@@ -28,6 +28,9 @@ const int BLINK = 500;
 #define SCREEN_RESET -1
 #define SCREEN_ADDRESS 0x3C
 
+//Buzzer
+#define BUZZER 27
+
 // Create the display
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, SCREEN_RESET);
 
@@ -366,6 +369,9 @@ void setup() {
   // Used to determine the "TimeOfDeath"
   timeElapsed = millis();
 
+  //Buzzer Setup
+  pinMode(BUZZER, OUTPUT);
+  digitalWrite(BUZZER, LOW);
 }
 
 // This function reads the life button status, flags it, and controls the blue LED for visual confirmation
@@ -501,8 +507,10 @@ void Lifespan(){
 	// Else, reset life back to 0
     life = 0;
     digitalWrite(RED, LOW);
+	digitalWrite(BUZZER, HIGH);
   } else{
     digitalWrite(RED, HIGH);
+	digitalWrite(BUZZER, LOW);
   }
 
   
