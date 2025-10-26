@@ -472,6 +472,12 @@ void HandleFun(){
   }
 }
 
+void Beep(unsigned int duration){
+	digitalWrite(BUZZER, HIGH);
+	delay(duration);
+	digitalWrite(BUZZER, LOW);
+}
+
 // This function handles the life functions including + and - life based on time in mills() and button presses
 void Lifespan(){
 
@@ -507,10 +513,9 @@ void Lifespan(){
 	// Else, reset life back to 0
     life = 0;
     digitalWrite(RED, LOW);
-	digitalWrite(BUZZER, HIGH);
+	Beep(50);
   } else{
     digitalWrite(RED, HIGH);
-	digitalWrite(BUZZER, LOW);
   }
 
   
