@@ -14,17 +14,17 @@
 
 // These are our colored LEDs for debugging
 #define RED 18
-#define BLUE 27
+#define BLUE 15
 
 // Here we'll define some crucial integer values that will run most of the application.
 const int MaxLife = 100;
 const int DecAmt = 1;
-const int DecTime = 30000;
+const int DecTime = 1000;
 const int BLINK = 500;
 
 // These are the definitions for the OLED display (0.96 OLED Display)
 #define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
+ #define SCREEN_HEIGHT 64
 #define SCREEN_RESET -1
 #define SCREEN_ADDRESS 0x3C
 
@@ -478,6 +478,7 @@ void Lifespan(){
 	// Resetting TimeOfDeath on another press that brings up life from 0 to a value
     if (life > 0 && TimeOfDeath != 0) {
       TimeOfDeath = 0;
+	  timeElapsed = millis();
     }
 	// Reset after flagging
     IsLifeButtonPressed = false;
