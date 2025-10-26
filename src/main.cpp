@@ -4,7 +4,6 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-
 // These are the buttons we'll be using
 #define LIFE_BUTTON 12
 #define FUN_BUTTON 14
@@ -21,18 +20,20 @@
 const int MaxLife = 100;
 const int DecAmt = 1;
 const int DecTime = 30000;
-const int BLINK = 500; // Previously 250, just curious on the pacing of the device
+const int BLINK = 500;
 
 // These are the definitions for the OLED display (0.96 OLED Display)
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define SCREEN_RESET -1
-#define SCREEN_ADDRESS 0x3C //Might be 0x3D
+#define SCREEN_ADDRESS 0x3C
 
-
+// Create the display
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, SCREEN_RESET);
 
-// These are the bitmaps for displays
+// These are the bitmaps for displays (Highly recommend that you minimize these variables if looking at the code)
+
+// This is the first screen with the normal heart size
 const unsigned char epd_bitmap_DefaultScreenTwo [] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfc, 0x63, 0xf8, 0x03, 
@@ -100,6 +101,7 @@ const unsigned char epd_bitmap_DefaultScreenTwo [] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
+// This is the same as the first screen, with a smaller heart size (for heartbeats)
 const unsigned char epd_bitmap_HeartBeatTwo [] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x03, 
@@ -167,6 +169,7 @@ const unsigned char epd_bitmap_HeartBeatTwo [] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
+// This is the "Later Partner" screen
 const unsigned char epd_bitmap_DeathScreenTwo [] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x03, 
@@ -234,6 +237,7 @@ const unsigned char epd_bitmap_DeathScreenTwo [] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
+// This is the "Happy face" screen
 const unsigned char epd_bitmap_LikeScreenTwo [] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfc, 0x63, 0xf8, 0x03, 
@@ -300,12 +304,8 @@ const unsigned char epd_bitmap_LikeScreenTwo [] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
-/*
-Since we understand that each second equates to 1000, we can also understand that each blink equates to 0.5 seconds, 
-this means that every two blinks is a second, this is much easier to visually determine if the time in millis is accurate.
-*/
 
-// These as well, just not constants
+// integer values that will help with the startup() as well as operating the LifeButton
 int life = 5;
 int CPR = 5;
 
@@ -363,6 +363,7 @@ void setup() {
   // Begin Display
   display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
 
+  // Used to determine the "TimeOfDeath"
   timeElapsed = millis();
 
 }
@@ -412,12 +413,15 @@ void readFunButton(){
 }
 
 void DeathTime(){
-  if (TimeOfDeath == 0) return;
+	// If TimeOfDeath is 0, disregard
+	if (TimeOfDeath == 0) return;
 
+// Time calculation
   unsigned long elapsedMillis = TimeOfDeath- timeElapsed;
   unsigned int seconds = (elapsedMillis / 1000) % 60;
   unsigned int minutes = (elapsedMillis / 60000);
 
+  // Printing the time calculated at the bottom of the Death Screen
   display.setTextSize(1);
   display.setTextColor(SSD1306_BLACK);
   display.setCursor(55,55);
@@ -428,25 +432,26 @@ void DeathTime(){
   display.display();
 }
 
-// This function controls the Green LED; this LED indicates the current state of the lifespan (flashing = alive)
+// This function controls the Heartbeat animation achieved by cycling between both DefaultScreen & Heartbeat
 void HeartBeat(){
   static unsigned long lastUpdate = 0;
   static bool toggle = false;
 
+  // This if ensures the screen is wiped each time
   if (millis() - lastUpdate >= 500){
     lastUpdate = millis();
     toggle = !toggle;
 
     display.clearDisplay();
     
-  
+  // Switching between the two screens
   if (life > 0){
   if (toggle){
     display.drawBitmap(0,0, epd_bitmap_DefaultScreenTwo, SCREEN_WIDTH, SCREEN_HEIGHT, 1);
   } else {
     display.drawBitmap(0,0, epd_bitmap_HeartBeatTwo, SCREEN_WIDTH, SCREEN_HEIGHT,1);
   }
-} else {
+} else { // If life is at 0, the program is "dead", this displays the death screen.
   display.drawBitmap(0,0, epd_bitmap_DeathScreenTwo, SCREEN_WIDTH, SCREEN_HEIGHT, 1);
   DeathTime();
 }
@@ -454,26 +459,27 @@ display.display();
   }
 }
 
+// This function handles the FunButton and determines if its been pressed or not
 void HandleFun(){
   if (IsFunButtonPressed){
     IsFunButtonPressed = false;
   }
 }
 
-// This function handles the life functions including + and - life based on time nad button presses
+// This function handles the life functions including + and - life based on time in mills() and button presses
 void Lifespan(){
 
-  // We begin by checking the button flag from readButton(), and then resetting it each time for a press.
+  // We begin by checking the button flag from readButton(), and then adding to it each time for a press.
   if (IsLifeButtonPressed){
     life += CPR;
     if (life > MaxLife){
       life = MaxLife;
     } 
-
+	// Resetting TimeOfDeath on another press that brings up life from 0 to a value
     if (life > 0 && TimeOfDeath != 0) {
       TimeOfDeath = 0;
     }
-
+	// Reset after flagging
     IsLifeButtonPressed = false;
   }
 
@@ -491,6 +497,7 @@ void Lifespan(){
     if(TimeOfDeath == 0){
       TimeOfDeath = millis();
     }
+	// Else, reset life back to 0
     life = 0;
     digitalWrite(RED, LOW);
   } else{
@@ -502,7 +509,7 @@ void Lifespan(){
 
 void loop() {
   /* The code in the loop runs repeatedly
-     We only need to call the functions since they cover all the functions as of now.
+     We only need to call the functions since they cover all the operations as of now.
   */
   readLifeButton();
   readFunButton();
